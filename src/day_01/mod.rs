@@ -29,7 +29,7 @@ where
     Ok(io::BufReader::new(file).lines())
 }
 
-fn solve_part_01(lines: &[String]) -> u32 {
+fn solve_part_01(lines: &Vec<String>) -> u32 {
     let mut list_left = SortedList::new();
     let mut list_right = SortedList::new();
     let mut sum: u32 = 0;
@@ -55,7 +55,7 @@ fn solve_part_01(lines: &[String]) -> u32 {
     sum
 }
 
-fn solve_part_02(lines: &[String]) -> i32 {
+fn solve_part_02(lines: &Vec<String>) -> i32 {
     let mut list_left = HashMap::new();
     let mut list_right = HashMap::new();
     let mut sum: i32 = 0;

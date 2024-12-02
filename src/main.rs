@@ -4,49 +4,45 @@ mod day_01;
 mod day_02;
 mod day_03;
 
-fn main() {
-    let args: Vec<String> = env::args().collect();
+// Define a macro to create functions for each day
+macro_rules! define_days {
+    ( $( $day_num:expr => $mod_name:ident::$func_name:ident ),* ) => {
+        fn main() {
+            let args: Vec<String> = env::args().collect();
 
-    if args.len() <= 1 {
-        run_every_day();
-        return;
-    }
+            if args.len() <= 1 {
+                run_every_day();
+                return;
+            }
 
-    let day: i64 = match args[1].parse::<i64>() {
-        Ok(num) => num,
-        Err(num) => {
-            println!("{}", num);
-            0
+            let day: i64 = match args[1].parse::<i64>() {
+                Ok(num) => num,
+                Err(_) => {
+                    println!("Invalid day. Running all days.");
+                    0
+                }
+            };
+
+            match day {
+                $(
+                    $day_num => $mod_name::$func_name(),
+                )*
+                _ => run_every_day(),
+            }
+        }
+
+        fn run_every_day() {
+            println!("running every day...\n");
+            $(
+                $mod_name::$func_name();
+            )*
+            println!("finished executing every day!");
         }
     };
-
-    match day {
-        1 => day_1(),
-        2 => day_2(),
-        _ => run_every_day(),
-    }
 }
 
-fn run_every_day() {
-    println!("running every day...\n");
-
-    day_2();
-
-    println!("finished executing every day!")
-}
-
-fn day_1() {
-    println!("------------------");
-    println!("Day one: ");
-
-    day_01::run_day_01();
-    println!("------------------");
-}
-
-fn day_2() {
-    println!("------------------");
-    println!("Day two: ");
-
-    day_02::run_day_02();
-    println!("------------------");
-}
+// Use the macro to define functions for each day
+define_days!(
+    1 => day_01::run_day_01,
+    2 => day_02::run_day_02
+);
