@@ -6,15 +6,16 @@ use std::io::{self, BufRead};
 use std::path::Path;
 
 pub fn run_day_01() {
-    let mut sum_part_01: u32 = 0;
-    let mut sum_part_02: i32 = 0;
+    let input_lines = match read_lines("src/day_01/input.txt") {
+        Ok(lines) => lines.filter_map(Result::ok).collect_vec(),
+        Err(err) => {
+            eprintln!("Error reading file: {}", err);
+            return;
+        }
+    };
 
-    if let Ok(lines) = read_lines("src/day_01/input.txt") {
-        sum_part_01 = solve_part_01(lines);
-    }
-    if let Ok(lines) = read_lines("src/day_01/input.txt") {
-        sum_part_02 = solve_part_02(lines);
-    }
+    let sum_part_01 = solve_part_01(&input_lines);
+    let sum_part_02 = solve_part_02(&input_lines);
 
     println!("part one: {}", sum_part_01);
     println!("part two: {}", sum_part_02);
@@ -28,18 +29,15 @@ where
     Ok(io::BufReader::new(file).lines())
 }
 
-fn solve_part_01(lines: io::Lines<io::BufReader<File>>) -> u32 {
+fn solve_part_01(lines: &[String]) -> u32 {
     let mut list_left = SortedList::new();
     let mut list_right = SortedList::new();
     let mut sum: u32 = 0;
 
-    lines.filter_map(Result::ok).for_each(|line| {
+    lines.iter().for_each(|line| {
         line.split_whitespace()
             .map(|x| x.parse::<i32>().unwrap())
-            .collect_vec()
-            .iter()
-            .copied()
-            .tuple_windows::<(i32, i32)>() // this processes the array in tuple windows
+            .tuple_windows::<(i32, i32)>()
             .for_each(|(a, b)| {
                 list_left.insert(a);
                 list_right.insert(b);
@@ -49,26 +47,23 @@ fn solve_part_01(lines: io::Lines<io::BufReader<File>>) -> u32 {
     list_left
         .to_vec()
         .iter()
-        .zip(list_right.to_vec().iter()) // Combines elements into pairs
+        .zip(list_right.to_vec().iter())
         .for_each(|(a, b)| {
             sum += a.abs_diff(*b);
         });
 
-    return sum;
+    sum
 }
 
-fn solve_part_02(lines: io::Lines<io::BufReader<File>>) -> i32 {
+fn solve_part_02(lines: &[String]) -> i32 {
     let mut list_left = HashMap::new();
     let mut list_right = HashMap::new();
     let mut sum: i32 = 0;
 
-    lines.filter_map(Result::ok).for_each(|line| {
+    lines.iter().for_each(|line| {
         line.split_whitespace()
             .map(|x| x.parse::<i32>().unwrap())
-            .collect_vec()
-            .iter()
-            .copied()
-            .tuple_windows::<(i32, i32)>() // this processes the array in tuple windows
+            .tuple_windows::<(i32, i32)>()
             .for_each(|(a, b)| {
                 list_left
                     .entry(a)
@@ -81,11 +76,11 @@ fn solve_part_02(lines: io::Lines<io::BufReader<File>>) -> i32 {
             });
     });
 
-    for (key, _) in &list_left {
+    for key in list_left.keys() {
         if let Some(right_value) = list_right.get(key) {
             sum += key * right_value;
         }
     }
 
-    return sum;
+    sum
 }

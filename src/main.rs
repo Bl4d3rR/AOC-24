@@ -37,7 +37,7 @@ fn run_every_day() {
 
 fn day_1() {
     println!("------------------");
-    println!("Day two: ");
+    println!("Day one: ");
 
     day_01::run_day_01();
     println!("------------------");
