@@ -1,6 +1,8 @@
 use std::env;
 
+mod day_01;
 mod day_02;
+mod day_03;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -19,6 +21,7 @@ fn main() {
     };
 
     match day {
+        1 => day_1(),
         2 => day_2(),
         _ => run_every_day(),
     }
@@ -30,6 +33,14 @@ fn run_every_day() {
     day_2();
 
     println!("finished executing every day!")
+}
+
+fn day_1() {
+    println!("------------------");
+    println!("Day two: ");
+
+    day_01::run_day_01();
+    println!("------------------");
 }
 
 fn day_2() {
