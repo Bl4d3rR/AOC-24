@@ -25,18 +25,23 @@ macro_rules! define_days {
 
             match day {
                 $(
-                    $day_num => $mod_name::$func_name(),
+                    $day_num => {
+                        println!("\nDay {}:", $day_num);
+                        $mod_name::$func_name();
+                    },
                 )*
                 _ => run_every_day(),
             }
         }
 
         fn run_every_day() {
-            println!("running every day...\n");
+            println!("running every day...");
             $(
+                println!("\nDay {}:", $day_num);
                 $mod_name::$func_name();
+                println!("-------------");
             )*
-            println!("finished executing every day!");
+            println!("\nfinished executing every day!");
         }
     };
 }
@@ -44,5 +49,6 @@ macro_rules! define_days {
 // Use the macro to define functions for each day
 define_days!(
     1 => day_01::run_day_01,
-    2 => day_02::run_day_02
+    2 => day_02::run_day_02,
+    3 => day_03::run_day_03
 );

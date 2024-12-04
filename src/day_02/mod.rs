@@ -67,9 +67,41 @@ fn solve_part_02(line: &Vec<i32>) -> bool {
     }
 
     // mega dumm, aber kb mehr edgecases zu suchen, lul
-    for i in 0..line.len() {
-        levels_to_delete.insert(i.try_into().unwrap());
+    for i in 0..line.len() - 1 {
+        let diff = line[i] - line[i + 1];
+        if diff == 0 || diff < -3 || diff > 3 {
+            levels_to_delete.insert(i.try_into().unwrap());
+            levels_to_delete.insert((i + 1).try_into().unwrap());
+        }
+
+        // check for monotony change (from decreasing to increasing)
+        // e.g. 2 5 3 4 6 <- here the 5 needs to be removed
+        // e.g. 2 5 3 8 9 <- here the 3 needs to be removed
+        // e.g. 2 0 1 2 5 <- here the 2 needs to be remobed
+        if i < line.len() && i > 0 {
+            if line[i] < line[i + 1] && line[i] < line[i - 1] {
+                levels_to_delete.insert(i.try_into().unwrap());
+                levels_to_delete.insert((i + 1).try_into().unwrap());
+                levels_to_delete.insert((i - 1).try_into().unwrap());
+            }
+
+            if line[i] > line[i + 1] && line[i] > line[i - 1] {
+                levels_to_delete.insert(i.try_into().unwrap());
+                levels_to_delete.insert((i + 1).try_into().unwrap());
+                levels_to_delete.insert((i - 1).try_into().unwrap());
+            }
+        }
     }
+
+    // if there are more than 4 indices
+    if levels_to_delete.len() > 4 {
+        return false;
+    }
+    // if levels_to_delete.len() == 4 {
+    //     println!("Levels: {:?} ", line);
+    //     println!("Levels to delete: {:?} ", levels_to_delete);
+    //     println!("");
+    // }
 
     for level_to_delete in levels_to_delete {
         let mut cloned_vec = line.clone();
