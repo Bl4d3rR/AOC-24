@@ -17,14 +17,13 @@ pub fn eval_mul(input: TokenStream) -> TokenStream {
     // Remove the surrounding quotes
     let input_str = &trimmed[1..trimmed.len() - 1];
 
-    // Tokenize and parse the string manually
     let mut sum_part_01 = 0;
     let mut sum_part_02 = 0;
+    let mut skip: bool = false;
 
     let mut chars = input_str.chars().peekable();
 
-    let mut skip: bool = false;
-
+    // Tokenize and parse the string manually
     // könnte man noch schön auslagern, aber kb mehr
     while let Some(ch) = chars.next() {
         if ch == 'd' && chars.peek() == Some(&'o') {
@@ -75,6 +74,8 @@ pub fn eval_mul(input: TokenStream) -> TokenStream {
     }
 
     // Generate code to declare and initialize both results
+    // Macro does not return anything, these variables will just be there
+    // after calling the macro, like magic, lul
     TokenStream::from(quote! {
         let sum_part_01 = #sum_part_01;
         let sum_part_02 = #sum_part_02;
