@@ -3,6 +3,7 @@ use std::env;
 mod day_01;
 mod day_02;
 mod day_03;
+mod day_04;
 
 // Define a macro to create functions for each day
 macro_rules! define_days {
@@ -50,5 +51,6 @@ macro_rules! define_days {
 define_days!(
     1 => day_01::run_day_01,
     2 => day_02::run_day_02,
-    3 => day_03::run_day_03
+    3 => day_03::run_day_03,
+    4 => day_04::run_day_04
 );
