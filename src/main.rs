@@ -1,4 +1,5 @@
 use std::env;
+use std::time::Instant;
 
 mod day_01;
 mod day_02;
@@ -27,8 +28,10 @@ macro_rules! define_days {
             match day {
                 $(
                     $day_num => {
+                        let start = Instant::now();
                         println!("\nDay {}:", $day_num);
                         $mod_name::$func_name();
+                        println!("took {}ns to solve both parts", start.elapsed().as_nanos());
                     },
                 )*
                 _ => run_every_day(),
@@ -38,8 +41,10 @@ macro_rules! define_days {
         fn run_every_day() {
             println!("running every day...");
             $(
+                let start = Instant::now();
                 println!("\nDay {}:", $day_num);
                 $mod_name::$func_name();
+                println!("took {}ns to solve both parts", start.elapsed().as_nanos());
                 println!("-------------");
             )*
             println!("\nfinished executing every day!");
