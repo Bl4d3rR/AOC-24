@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io::Read;
 
 pub fn run_day_04() {
-    let grid = getGrid();
+    let grid = get_grid();
     let mut counter = 0;
 
     // Iterate over the 2D vector row by row using iterators
@@ -96,7 +96,7 @@ pub fn run_day_04() {
     println!("part one: {}", counter);
 }
 
-fn getGrid() -> Vec<Vec<char>> {
+fn get_grid() -> Vec<Vec<char>> {
     // Open the file
     let mut file = File::open("src/day_04/input_big.txt").expect("Failed to open file");
 
