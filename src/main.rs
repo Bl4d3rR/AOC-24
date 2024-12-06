@@ -5,6 +5,7 @@ mod day_01;
 mod day_02;
 mod day_03;
 mod day_04;
+mod day_05;
 
 // Define a macro to create functions for each day
 macro_rules! define_days {
@@ -31,7 +32,7 @@ macro_rules! define_days {
                         let start = Instant::now();
                         println!("\nDay {}:", $day_num);
                         $mod_name::$func_name();
-                        println!("took {}ns to solve both parts", start.elapsed().as_nanos());
+                        println!("took {}ms to solve both parts", start.elapsed().as_millis());
                     },
                 )*
                 _ => run_every_day(),
@@ -44,7 +45,7 @@ macro_rules! define_days {
                 let start = Instant::now();
                 println!("\nDay {}:", $day_num);
                 $mod_name::$func_name();
-                println!("took {}ns to solve both parts", start.elapsed().as_nanos());
+                println!("took {}ms to solve both parts", start.elapsed().as_millis());
                 println!("-------------");
             )*
             println!("\nfinished executing every day!");
@@ -57,5 +58,6 @@ define_days!(
     1 => day_01::run_day_01,
     2 => day_02::run_day_02,
     3 => day_03::run_day_03,
-    4 => day_04::run_day_04
+    4 => day_04::run_day_04,
+    5 => day_05::run_day_05
 );

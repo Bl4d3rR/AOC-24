@@ -66,7 +66,6 @@ fn solve_part_02(line: &Vec<i32>) -> bool {
         return true;
     }
 
-    // mega dumm, aber kb mehr edgecases zu suchen, lul
     for i in 0..line.len() - 1 {
         let diff = line[i] - line[i + 1];
         if diff == 0 || diff < -3 || diff > 3 {
