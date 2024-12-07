@@ -38,7 +38,6 @@ impl Guard {
         let tmp_row = self.advance_row;
         self.advance_row = self.advance_col;
         self.advance_col = tmp_row * -1;
-
     }
 
     pub fn rotate_neg_90_deg(&mut self) {
@@ -83,8 +82,8 @@ impl Guard {
 }
 
 pub fn run_day_06() {
-    let ten_millis = time::Duration::from_millis(400);
-    clearscreen::clear().expect("failed to clear screen");
+    let ten_millis = time::Duration::from_millis(70);
+    // clearscreen::clear().expect("failed to clear screen");
 
     // Parse the file into a 2D grid
     let (mut grid, start) = parse_file_to_grid("src/day_06/input.txt");
@@ -111,19 +110,20 @@ pub fn run_day_06() {
     loop {
         // hits a wall
         if grid[guard.get_advance_row()][guard.get_advance_col()] == '#' {
-            // walls.push_back((guard.get_advance_row().try_into().unwrap(), guard.col));
             guard.rotate_90_deg();
             continue;
         }
-        
-        if grid[guard.get_advance_row()][guard.get_advance_col()] != 'X' && check_bullshit_cycle(grid.clone(), guard.clone()) {
+
+        if grid[guard.get_advance_row()][guard.get_advance_col()] != 'X'
+            && check_bullshit_cycle(grid.clone(), guard.clone())
+        {
             if !walls.contains_key(&(guard.get_advance_row(), guard.get_advance_col())) {
                 num_walls += 1;
             } else {
                 walls.insert((guard.get_advance_row(), guard.get_advance_col()), 0);
             }
         }
-        
+
         if grid[guard.get_row()][guard.get_col()] != 'X' {
             n_visited += 1;
         }
@@ -132,22 +132,23 @@ pub fn run_day_06() {
         // print_grid(grid.clone(), n_visited, num_walls, guard.row, guard.col);
         grid[guard.get_row()][guard.get_col()] = guard.path;
 
-        //println!("Main Loop: {}", cnt);
-
+        // UNCOMMENT EVERYTHING FOR ANIMATION!
         // thread::sleep(ten_millis);
         // clearscreen::clear().expect("failed to clear screen");
 
         if guard.col + guard.advance_col == grid_width - 1
-        || guard.col + guard.advance_col == -1
-        || guard.row + guard.advance_row == grid_heigth - 1
-        || guard.row + guard.advance_row == -1
+            || guard.col + guard.advance_col == -1
+            || guard.row + guard.advance_row == grid_heigth - 1
+            || guard.row + guard.advance_row == -1
         {
             break;
         }
         guard.walk();
     }
-    print_grid(grid.clone(), n_visited + 2, num_walls, guard.row, guard.col);
-    println!("Need: 1784");
+    // print_grid(grid.clone(), n_visited + 2, num_walls, guard.row, guard.col);
+
+    println!("part one: {}", n_visited + 2);
+    println!("part two: {}", num_walls);
 }
 
 fn check_bullshit_cycle(mut grid: Vec<Vec<char>>, mut guard: Guard) -> bool {
@@ -157,35 +158,27 @@ fn check_bullshit_cycle(mut grid: Vec<Vec<char>>, mut guard: Guard) -> bool {
     let mut visited: HashMap<(i32, i32), HashMap<char, usize>> = HashMap::new();
 
     grid[guard.get_advance_row()][guard.get_advance_col()] = '#';
-    
+
     loop {
         grid[guard.get_row()][guard.get_col()] = guard.path;
 
         if check_value_or_insert(&mut visited, &guard) {
-            //println!("Visited: {:?}", visited);
-            println!("Pos to check: {:?}", guard);
             return true;
         }
 
         // hits a wall
         if grid[guard.get_advance_row()][guard.get_advance_col()] == '#' {
-            // walls.push_back((guard.get_advance_row().try_into().unwrap(), guard.col));
-            //println!("Before: ({}, {})", guard.advance_col, guard.advance_row);
-           // while grid[guard.get_advance_row()][guard.get_advance_col()] == '#' {    
-                guard.rotate_90_deg();   
-                continue;       
-            //}
+            guard.rotate_90_deg();
+            continue;
         }
-        // print_grid(grid.clone(), 0, 0, guard.row, guard.col);
-        // println!("{}, {}", guard.advance_row, guard.advance_col);
+
         guard.walk();
 
-        if guard.col + guard.advance_col == grid_width - 1
+        if guard.col + guard.advance_col == grid_width
             || guard.col + guard.advance_col == -1
-            || guard.row + guard.advance_row == grid_heigth -1
+            || guard.row + guard.advance_row == grid_heigth
             || guard.row + guard.advance_row == -1
         {
-            // println!("END-------------- walked: {}\n\n", cnt);
             return false;
         }
     }
@@ -195,19 +188,11 @@ fn check_value_or_insert(
     visited: &mut HashMap<(i32, i32), HashMap<char, usize>>,
     guard: &Guard,
 ) -> bool {
-    // println!("HashMap before: {:?}", visited);
-    // Use entry API to handle both existence and insertion
     if let Some(inner_map) = visited.get_mut(&(guard.row, guard.col)) {
         if let Some(_) = inner_map.get_mut(&guard.guard) {
-            // println!("HashMap after: {:?}", visited);
-            // println!("Guard: {:?}", guard);
-
-            return true; // Key exists
+            return true;
         } else {
             inner_map.insert(guard.guard, 0);
-            //if inner_map.len() > 1 {
-            //    println!("Inner Map: {:?}", inner_map);
-            //}
         }
     } else {
         visited
@@ -215,44 +200,7 @@ fn check_value_or_insert(
             .or_insert_with(HashMap::new)
             .insert(guard.guard, 0);
     }
-
-    // println!("HashMap after: {:?}", visited);
-    // println!("Visited: false");
-
     false
-}
-
-fn check_possible_loop(walls: &VecDeque<(i32, i32)>, direction: char) -> i32 {
-    let mut possible = false;
-    let mut num_fields_to_walk = 0;
-
-    if (walls[0].0 - walls[1].0).abs() == 1
-        || (walls[0].0 - walls[2].0).abs() == 1
-        || (walls[1].0 - walls[2].0).abs() == 1
-    {
-        if (walls[0].1 - walls[1].1).abs() == 1
-            || (walls[0].1 - walls[2].1).abs() == 1
-            || (walls[1].1 - walls[2].1).abs() == 1
-        {
-            possible = true;
-        }
-    }
-
-    // get num fields to walk, to check if there is an obstacle in the way
-    num_fields_to_walk = match direction {
-        '<' => (walls[0].1 - walls[1].1).abs(),
-        '^' => (walls[0].0 - walls[1].0).abs(),
-        '>' => (walls[0].1 - walls[1].1).abs(),
-        'v' => (walls[0].0 - walls[1].0).abs(),
-        _ => 0,
-    };
-
-    println!("num field to walk: {}", num_fields_to_walk);
-    if possible {
-        num_fields_to_walk
-    } else {
-        0
-    }
 }
 
 fn print_grid(grid: Vec<Vec<char>>, n_visited: i32, num_walls: i32, x: i32, y: i32) {
@@ -275,7 +223,7 @@ fn print_grid(grid: Vec<Vec<char>>, n_visited: i32, num_walls: i32, x: i32, y: i
         for col_idx in start_col..end_col {
             let char = grid[row_idx as usize][col_idx as usize];
             if char == '>' || char == '<' || char == '^' || char == 'v' {
-                result.push_str(&format!(" \x1b[31m{}\x1b[0m", char));
+                result.push_str(&format!(" \x1b[31m{}\x1b[0m", char)); // change color to red
             } else {
                 result.push_str(&format!(" {}", char));
             }
