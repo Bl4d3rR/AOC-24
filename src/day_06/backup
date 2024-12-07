@@ -35,10 +35,6 @@ impl Guard {
             }
             _ => return,
         }
-        let tmp_row = self.advance_row;
-        self.advance_row = self.advance_col;
-        self.advance_col = tmp_row * -1;
-
     }
 
     pub fn rotate_neg_90_deg(&mut self) {
@@ -69,16 +65,16 @@ impl Guard {
     }
 
     pub fn get_col(&self) -> usize {
-        self.col as usize
+        self.col.try_into().unwrap()
     }
     pub fn get_row(&self) -> usize {
-        self.row as usize
+        self.row.try_into().unwrap()
     }
     pub fn get_advance_col(&self) -> usize {
-        (self.col + self.advance_col) as usize
+        (self.col + self.advance_col).try_into().unwrap()
     }
     pub fn get_advance_row(&self) -> usize {
-        (self.row + self.advance_row) as usize
+        (self.row + self.advance_row).try_into().unwrap()
     }
 }
 
@@ -87,7 +83,7 @@ pub fn run_day_06() {
     clearscreen::clear().expect("failed to clear screen");
 
     // Parse the file into a 2D grid
-    let (mut grid, start) = parse_file_to_grid("src/day_06/input.txt");
+    let (mut grid, start) = parse_file_to_grid("src/day_06/input_small.txt");
 
     let mut guard = Guard {
         guard: '^',
@@ -107,87 +103,154 @@ pub fn run_day_06() {
 
     let mut walls: HashMap<(usize, usize), i32> = HashMap::new();
     let mut num_walls = 0;
+    let mut num_fields_to_walk = 0;
+    let mut walked = 0;
+    let mut row_wall = true;
+    let mut checked = false;
+    let mut cnt = 0;
 
     loop {
+        cnt += 1;
+        //if cnt == 3 {
+         //    break;
+         //}
+       
+        if grid[guard.get_advance_row()][guard.get_advance_col()] != 'X' &&  check_bullshit_cycle(grid.clone(), guard.clone()) {
+            if !walls.contains_key(&(guard.get_advance_row(), guard.get_advance_col())) {
+                num_walls += 1;
+                walls.insert((guard.get_advance_row(), guard.get_advance_col()), 0);
+            }
+
+            checked = true;
+        }
+
+        guard.walk();
+
         // hits a wall
         if grid[guard.get_advance_row()][guard.get_advance_col()] == '#' {
             // walls.push_back((guard.get_advance_row().try_into().unwrap(), guard.col));
             guard.rotate_90_deg();
-            continue;
+            let tmp_col = guard.advance_col;
+            guard.advance_col = if guard.advance_col != 0 {0} else if guard.advance_row == -1 {1} else {-1};
+            guard.advance_row = if guard.advance_row != 0 {0} else if tmp_col == -1 {-1} else {1};
         }
-        
-        if grid[guard.get_advance_row()][guard.get_advance_col()] != 'X' && check_bullshit_cycle(grid.clone(), guard.clone()) {
-            if !walls.contains_key(&(guard.get_advance_row(), guard.get_advance_col())) {
-                num_walls += 1;
-            } else {
-                walls.insert((guard.get_advance_row(), guard.get_advance_col()), 0);
-            }
-        }
-        
+
         if grid[guard.get_row()][guard.get_col()] != 'X' {
             n_visited += 1;
         }
 
-        grid[guard.get_row()][guard.get_col()] = guard.guard;
-        // print_grid(grid.clone(), n_visited, num_walls, guard.row, guard.col);
-        grid[guard.get_row()][guard.get_col()] = guard.path;
+        let ridx: usize = guard.get_row();
+        let cidx: usize = guard.get_col();
 
-        //println!("Main Loop: {}", cnt);
+        grid[ridx][cidx] = guard.guard;
+        // print_grid(grid.clone(), n_visited, num_walls, guard.row, guard.col);
+        grid[ridx][cidx] = guard.path;
+
+        if guard.col + guard.advance_col == grid_width - 1
+            || guard.col + guard.advance_col == 0
+            || guard.row + guard.advance_row == grid_heigth - 1
+            || guard.row + guard.advance_row == 0
+        {
+            // thread::sleep(ten_millis);
+            // clearscreen::clear().expect("failed to clear screen");
+
+            guard.walk();
+            walked += 1;
+            if check_bullshit_cycle(grid.clone(), guard.clone()) {
+                num_walls += 1;
+                checked = true;
+            }
+
+            if grid[guard.get_row()][guard.get_col()] != 'X' {
+                n_visited += 1;
+            }
+
+            let ridx: usize = guard.get_row();
+            let cidx: usize = guard.get_col();
+
+            grid[ridx][cidx] = guard.guard;
+            // print_grid(grid.clone(), n_visited, num_walls, guard.row, guard.col);
+            grid[ridx][cidx] = guard.path;
+
+            n_visited += 1;
+
+            // if check_bullshit_cycle(grid.clone(), guard.clone(), row_wall) {
+            //     num_walls += 1;
+            //     checked = true;
+            // }
+            // thread::sleep(ten_millis);
+            // clearscreen::clear().expect("failed to clear screen");
+
+            // println!("walked: {} num_fields: {}", walked, num_fields_to_walk);
+
+            // print_grid(grid, n_visited, num_walls, guard.row, guard.col);
+
+            break;
+        }
+        walked += 1;
+        println!("Main Loop: {}", cnt);
 
         // thread::sleep(ten_millis);
         // clearscreen::clear().expect("failed to clear screen");
-
-        if guard.col + guard.advance_col == grid_width - 1
-        || guard.col + guard.advance_col == -1
-        || guard.row + guard.advance_row == grid_heigth - 1
-        || guard.row + guard.advance_row == -1
-        {
-            break;
-        }
-        guard.walk();
     }
-    print_grid(grid.clone(), n_visited + 2, num_walls, guard.row, guard.col);
+    print_grid(grid.clone(), n_visited, num_walls, guard.row, guard.col);
     println!("Need: 1784");
 }
 
 fn check_bullshit_cycle(mut grid: Vec<Vec<char>>, mut guard: Guard) -> bool {
     let grid_width: i32 = grid[0].len().try_into().unwrap();
     let grid_heigth: i32 = grid.len().try_into().unwrap();
+    let grid_copy = grid.clone();
+    let start_row = guard.row;
+    let start_col = guard.col;
 
     let mut visited: HashMap<(i32, i32), HashMap<char, usize>> = HashMap::new();
 
-    grid[guard.get_advance_row()][guard.get_advance_col()] = '#';
-    
+    // println!("\nBEGIN --------------");
+
+    // println!("{}, {}", guard.advance_row, guard.advance_col);
+
+    let tmp_col = guard.advance_col;
+    guard.advance_col = if guard.advance_col != 0 {0} else if guard.advance_row == -1 {1} else {-1};
+    guard.advance_row = if guard.advance_row != 0 {0} else if tmp_col == -1 {-1} else {1};
+    guard.rotate_90_deg();
+
+    visited
+        .entry((guard.row, guard.col))
+        .or_insert(HashMap::new())
+        .insert(guard.guard, 0);
+
+    // println!("{}, {}", guard.advance_row, guard.advance_col);
+
     loop {
-        grid[guard.get_row()][guard.get_col()] = guard.path;
+        guard.walk();
 
         if check_value_or_insert(&mut visited, &guard) {
-            //println!("Visited: {:?}", visited);
             println!("Pos to check: {:?}", guard);
             return true;
         }
 
-        // hits a wall
+        if guard.col + guard.advance_col == grid_width - 1 
+            || guard.col + guard.advance_col == 0
+            || guard.row + guard.advance_row == grid_heigth - 1
+            || guard.row + guard.advance_row == 0
+        {
+            return false
+        }
+
         if grid[guard.get_advance_row()][guard.get_advance_col()] == '#' {
             // walls.push_back((guard.get_advance_row().try_into().unwrap(), guard.col));
-            //println!("Before: ({}, {})", guard.advance_col, guard.advance_row);
-           // while grid[guard.get_advance_row()][guard.get_advance_col()] == '#' {    
-                guard.rotate_90_deg();   
-                continue;       
-            //}
+            guard.rotate_90_deg();
+            let tmp_col = guard.advance_col;
+            guard.advance_col = if guard.advance_col != 0 {0} else if guard.advance_row == -1 {1} else {-1};
+            guard.advance_row = if guard.advance_row != 0 {0} else if tmp_col == -1 {-1} else {1};
         }
-        // print_grid(grid.clone(), 0, 0, guard.row, guard.col);
-        // println!("{}, {}", guard.advance_row, guard.advance_col);
-        guard.walk();
 
-        if guard.col + guard.advance_col == grid_width - 1
-            || guard.col + guard.advance_col == -1
-            || guard.row + guard.advance_row == grid_heigth -1
-            || guard.row + guard.advance_row == -1
-        {
-            // println!("END-------------- walked: {}\n\n", cnt);
-            return false;
-        }
+        grid[guard.get_row()][guard.get_col()] = guard.path;
+        
+        print_grid(grid.clone(), 0, 0, guard.row, guard.col);
+
+        // println!("{}, {}", guard.advance_row, guard.advance_col);
     }
 }
 
@@ -205,9 +268,6 @@ fn check_value_or_insert(
             return true; // Key exists
         } else {
             inner_map.insert(guard.guard, 0);
-            //if inner_map.len() > 1 {
-            //    println!("Inner Map: {:?}", inner_map);
-            //}
         }
     } else {
         visited
@@ -221,6 +281,7 @@ fn check_value_or_insert(
 
     false
 }
+
 
 fn check_possible_loop(walls: &VecDeque<(i32, i32)>, direction: char) -> i32 {
     let mut possible = false;

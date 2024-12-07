@@ -3,7 +3,7 @@ use std::{
     io::{BufRead, BufReader},
 };
 
-static FILE_PATH: &'static str = "src/day_06/input.txt";
+static FILE_PATH: &'static str = "src/day_06/input_henning.txt";
 
 fn bound_check(x: i32, y: i32, width: i32, height: i32) -> bool {
     x >= 0 && x < height && y >= 0 && y < width
