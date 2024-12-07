@@ -1,7 +1,10 @@
 use core::num;
-use std::{collections::VecDeque, fs, thread, time};
+use std::{
+    collections::{HashMap, VecDeque},
+    fs, thread, time,
+};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 struct Guard {
     guard: char,
     path: char,
@@ -98,7 +101,7 @@ pub fn run_day_06() {
 
     grid[start.0][start.1] = 'X';
 
-    let mut walls: VecDeque<(i32, i32)> = VecDeque::new();
+    let mut walls: HashMap<(usize, usize), i32> = HashMap::new();
     let mut num_walls = 0;
     let mut num_fields_to_walk = 0;
     let mut walked = 0;
@@ -107,13 +110,18 @@ pub fn run_day_06() {
     let mut cnt = 0;
 
     loop {
-        // cnt += 1;
-        // if cnt == 4 {
+        cnt += 1;
+        // if cnt == 2 {
         //     break;
         // }
         guard.walk();
         if check_bullshit_cycle(grid.clone(), guard.clone(), row_wall) {
-            num_walls += 1;
+            if !walls.contains_key(&(guard.get_advance_row(), guard.get_advance_col())) {
+                num_walls += 1;
+            } else {
+                walls.insert((guard.get_advance_row(), guard.get_advance_col()), 0);
+            }
+
             checked = true;
         }
 
@@ -132,7 +140,7 @@ pub fn run_day_06() {
 
         // hits a wall in a row
         if grid[guard.get_row()][guard.get_advance_col()] == '#' {
-            walls.push_back((guard.row, guard.get_advance_col().try_into().unwrap()));
+            // walls.push_back((guard.row, guard.get_advance_col().try_into().unwrap()));
 
             guard.rotate_90_deg();
             guard.advance_row = guard.advance_col;
@@ -142,7 +150,7 @@ pub fn run_day_06() {
 
         // hits a wall in a column
         if grid[guard.get_advance_row()][guard.get_col()] == '#' {
-            walls.push_back((guard.get_advance_row().try_into().unwrap(), guard.col));
+            // walls.push_back((guard.get_advance_row().try_into().unwrap(), guard.col));
 
             guard.rotate_90_deg();
             guard.advance_col = guard.advance_row * -1;
@@ -157,7 +165,7 @@ pub fn run_day_06() {
         let cidx: usize = guard.get_col();
 
         grid[ridx][cidx] = guard.guard;
-        print_grid(grid.clone(), n_visited, num_walls, guard.row, guard.col);
+        // print_grid(grid.clone(), n_visited, num_walls, guard.row, guard.col);
         grid[ridx][cidx] = guard.path;
 
         if guard.col + guard.advance_col == grid_width - 1
@@ -183,7 +191,7 @@ pub fn run_day_06() {
             let cidx: usize = guard.get_col();
 
             grid[ridx][cidx] = guard.guard;
-            print_grid(grid.clone(), n_visited, num_walls, guard.row, guard.col);
+            // print_grid(grid.clone(), n_visited, num_walls, guard.row, guard.col);
             grid[ridx][cidx] = guard.path;
 
             n_visited += 1;
@@ -195,22 +203,30 @@ pub fn run_day_06() {
             // thread::sleep(ten_millis);
             // clearscreen::clear().expect("failed to clear screen");
 
-            println!("walked: {} num_fields: {}", walked, num_fields_to_walk);
+            // println!("walked: {} num_fields: {}", walked, num_fields_to_walk);
 
-            print_grid(grid, n_visited, num_walls, guard.row, guard.col);
+            // print_grid(grid, n_visited, num_walls, guard.row, guard.col);
 
             break;
         }
         walked += 1;
+        println!("Main Loop: {}", cnt);
 
         // thread::sleep(ten_millis);
         // clearscreen::clear().expect("failed to clear screen");
     }
+    print_grid(grid.clone(), n_visited, num_walls, guard.row, guard.col);
+    println!("Need: 1784");
 }
 
 fn check_bullshit_cycle(mut grid: Vec<Vec<char>>, mut guard: Guard, row: bool) -> bool {
     let grid_width: i32 = grid[0].len().try_into().unwrap();
     let grid_heigth: i32 = grid.len().try_into().unwrap();
+
+    let start_row = guard.row;
+    let start_col = guard.col;
+
+    let mut visited: HashMap<(i32, i32), HashMap<char, usize>> = HashMap::new();
 
     // println!("\nBEGIN --------------");
 
@@ -223,19 +239,36 @@ fn check_bullshit_cycle(mut grid: Vec<Vec<char>>, mut guard: Guard, row: bool) -
         guard.advance_col = guard.advance_row * -1;
         guard.advance_row = 0;
     }
+    guard.rotate_90_deg();
+
+    visited
+        .entry((guard.row, guard.col))
+        .or_insert(HashMap::new())
+        .insert(guard.guard, 0);
+
     // println!("{}, {}", guard.advance_row, guard.advance_col);
 
     loop {
-        if grid[guard.get_row()][guard.get_col()] == 'X' {
-            if grid[guard.get_advance_row()][guard.get_advance_col()] == '#' {
-                // println!("END TURE--------------\n\n");
-                return true;
-            }
+        guard.walk();
+
+        if check_value_or_insert(&mut visited, &guard) {
+            println!("Pos to check: {:?}", guard);
+            return true;
         }
-        if guard.col + guard.advance_col == grid_width - 1
-            || guard.col + guard.advance_col == 0
-            || guard.row + guard.advance_row == grid_heigth - 1
-            || guard.row + guard.advance_row == 0
+
+        // if guard.row == start_row && guard.col == start_col {
+        //     return true;
+        // }
+        // if grid[guard.get_row()][guard.get_col()] == 'X' {
+        //     if grid[guard.get_advance_row()][guard.get_advance_col()] == '#' {
+        //         // println!("END TURE--------------\n\n");
+        //         return true;
+        //     }
+        // }
+        if guard.col + guard.advance_col == grid_width
+            || guard.col + guard.advance_col == -1
+            || guard.row + guard.advance_row == grid_heigth
+            || guard.row + guard.advance_row == -1
         {
             // println!("END--------------\n\n");
             return false;
@@ -247,6 +280,7 @@ fn check_bullshit_cycle(mut grid: Vec<Vec<char>>, mut guard: Guard, row: bool) -
                 guard.advance_row
             };
             guard.advance_col = 0;
+            guard.rotate_90_deg();
         }
 
         // hits a wall in a column
@@ -261,9 +295,37 @@ fn check_bullshit_cycle(mut grid: Vec<Vec<char>>, mut guard: Guard, row: bool) -
 
         grid[guard.get_row()][guard.get_col()] = guard.path;
         // print_grid(grid.clone(), 0, 0, guard.row, guard.col);
-        guard.walk();
+
         // println!("{}, {}", guard.advance_row, guard.advance_col);
     }
+}
+
+fn check_value_or_insert(
+    visited: &mut HashMap<(i32, i32), HashMap<char, usize>>,
+    guard: &Guard,
+) -> bool {
+    // println!("HashMap before: {:?}", visited);
+    // Use entry API to handle both existence and insertion
+    if let Some(inner_map) = visited.get_mut(&(guard.row, guard.col)) {
+        if let Some(_) = inner_map.get_mut(&guard.guard) {
+            // println!("HashMap after: {:?}", visited);
+            // println!("Guard: {:?}", guard);
+
+            return true; // Key exists
+        } else {
+            inner_map.insert(guard.guard, 0);
+        }
+    } else {
+        visited
+            .entry((guard.row, guard.col))
+            .or_insert_with(HashMap::new)
+            .insert(guard.guard, 0);
+    }
+
+    // println!("HashMap after: {:?}", visited);
+    // println!("Visited: false");
+
+    false
 }
 
 fn check_possible_loop(walls: &VecDeque<(i32, i32)>, direction: char) -> i32 {
