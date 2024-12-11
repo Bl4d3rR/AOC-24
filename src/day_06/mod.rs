@@ -97,8 +97,8 @@ pub fn run_day_06() {
         advance_col: 0,
     };
 
-    let grid_width: i32 = grid[0].len() as i32;
-    let grid_heigth: i32 = grid.len() as i32;
+    let grid_width: i32 = grid[0].len().try_into().unwrap();
+    let grid_heigth: i32 = grid.len().try_into().unwrap();
 
     let mut n_visited = 0;
 
@@ -152,8 +152,8 @@ pub fn run_day_06() {
 }
 
 fn check_bullshit_cycle(mut grid: Vec<Vec<char>>, mut guard: Guard) -> bool {
-    let grid_width: i32 = grid[0].len() as i32;
-    let grid_heigth: i32 = grid.len() as i32;
+    let grid_width: i32 = grid[0].len().try_into().unwrap();
+    let grid_heigth: i32 = grid.len().try_into().unwrap();
 
     let mut visited: HashMap<(i32, i32), HashMap<char, usize>> = HashMap::new();
 
