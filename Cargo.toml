@@ -12,4 +12,5 @@ once_cell = "1.20.2"
 sortedlist-rs = "0.2.2"
 my_project_macros = { path = "./my_project_macros" }
 clearscreen = "3.0.0"
+memoize = "0.4.2"
 
