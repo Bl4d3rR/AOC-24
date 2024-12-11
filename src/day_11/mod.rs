@@ -1,64 +1,65 @@
-use core::num;
 use std::iter;
+use std::sync::{Arc, Mutex};
+use std::thread;
 
 pub fn run_day_11() {
-    let numbers: Vec<u128> = vec![17639, 47, 3858, 0, 470624, 9467423, 5, 188];
-    let mut sum = numbers.len() as u128;
-    let mut iteration = 0 as u128;
+    let numbers = vec![17639, 47, 3858, 0, 470624, 9467423, 5, 188];
+    let sum = Arc::new(Mutex::new(numbers.len() as u128));
+    let mut handles = vec![];
 
-    for number in numbers {
-        iteration = 0;
-        solve_part_01(number, iteration, &mut sum);
+    for &number in &numbers {
+        let sum_clone = Arc::clone(&sum);
+        let handle = thread::spawn(move || {
+            solve_part_01(number, 0, &sum_clone);
+        });
+        handles.push(handle);
     }
 
-    println!("part one: {}", sum);
+    for handle in handles {
+        handle.join().expect("Thread panicked");
+    }
+
+    let final_sum = sum.lock().unwrap();
+    println!("part one: {}", *final_sum);
 }
 
-fn solve_part_01(number: u128, iteration: u128, sum: &mut u128) {
-    // println!("Number: {}", number);
-    if iteration == 75 {
+fn solve_part_01(number: u128, iteration: u128, sum: &Arc<Mutex<u128>>) {
+    if iteration >= 75 {
         return;
     }
 
-    let iter = iteration + 1;
+    let sum_guard = sum.lock().unwrap();
+    if *sum_guard % 10_000_000 == 0 {
+        println!("Sum: {}\nIteration: {}", sum_guard, iteration);
+    }
+    drop(sum_guard);
 
     if number == 0 {
-        solve_part_01(1, iter, sum);
+        solve_part_01(1, iteration + 1, sum);
         return;
     }
 
     let num_str = number.to_string();
     if num_str.len() % 2 == 0 {
-        *sum += 1;
-        // left half
-        let left_half = &num_str[..num_str.len() / 2];
-        let left_half_i32 = match left_half.parse::<u128>() {
-            Ok(value) => value,
-            Err(e) => {
-                println!("Failed to parse left side: {}: {}", e, num_str);
-                return;
-            }
-        };
-        // println!("Number left: {}", left_half_i32);
+        let mut sum_guard = sum.lock().unwrap();
+        *sum_guard += 1;
+        drop(sum_guard);
 
-        solve_part_01(left_half_i32, iter, sum);
+        let (left_half, right_half) = num_str.split_at(num_str.len() / 2);
 
-        // right half
-        let right_half = &num_str[num_str.len() / 2..];
-        let right_half_i32 = match right_half.parse::<u128>() {
-            Ok(value) => value,
-            Err(e) => {
-                println!("Failed to parse right side: {}: {}", e, num_str);
-                return;
-            }
-        };
-        // println!("Number right: {}", right_half_i32);
+        if let Ok(left_half_value) = left_half.parse::<u128>() {
+            solve_part_01(left_half_value, iteration + 1, sum);
+        } else {
+            eprintln!("Failed to parse left side: {}", num_str);
+        }
 
-        solve_part_01(right_half_i32, iter, sum);
-
-        return;
+        if let Ok(right_half_value) = right_half.parse::<u128>() {
+            solve_part_01(right_half_value, iteration + 1, sum);
+        } else {
+            eprintln!("Failed to parse right side: {}", num_str);
+        }
+    } else {
+        let new_number = number * 2024;
+        solve_part_01(new_number, iteration + 1, sum);
     }
-
-    let mul_1024 = number * 2024;
-    solve_part_01(mul_1024, iter, sum);
 }
