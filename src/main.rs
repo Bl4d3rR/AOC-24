@@ -9,6 +9,7 @@ mod day_05;
 mod day_06;
 mod day_07;
 mod day_11;
+mod day_12;
 mod day_13;
 
 // Define a macro to create functions for each day
@@ -67,6 +68,7 @@ define_days!(
     6 => day_06::run_day_06,
     7 => day_07::run_day_07,
     11 => day_11::run_day_11,
+    12 => day_12::run_day_12,
     13 => day_13::run_day_13
 
 );
