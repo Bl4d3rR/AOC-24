@@ -13,4 +13,7 @@ sortedlist-rs = "0.2.2"
 my_project_macros = { path = "./my_project_macros" }
 clearscreen = "3.0.0"
 memoize = "0.4.2"
+ndarray = "0.16.1"
+ndarray-linalg = "0.16.0"
+regex = "1.11.1"
 
