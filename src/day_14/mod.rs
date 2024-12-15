@@ -1,12 +1,8 @@
-use itertools::Position;
 use regex::Regex;
-use std::collections::HashMap;
+
+use std::f32::INFINITY;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
-use std::ops::Rem;
-use std::sync::Arc;
-use std::thread;
-use std::time::Duration;
 
 #[derive(Default, Clone)]
 struct quadrants {
@@ -19,10 +15,6 @@ struct quadrants {
 
 impl quadrants {
     fn get_sum(self) -> i32 {
-        // println!(
-        //     "{}, {}, {}, {}",
-        //     self.first, self.second, self.third, self.fourth
-        // );
         self.first * self.second * self.third * self.fourth
     }
 
@@ -34,17 +26,6 @@ impl quadrants {
         let new_position = self
             .clone()
             .calculate_position_by_second(position, velocity, counter);
-        // println!(
-        //     "pos: {}, {}, velocity: {}, {}, new_pos: {}, {}, grid: {}, {}",
-        //     position.0,
-        //     position.1,
-        //     velocity.0,
-        //     velocity.1,
-        //     new_position.0,
-        //     new_position.1,
-        //     self.grid_size.0,
-        //     self.grid_size.1
-        // );
 
         // check first quadrant
         if new_position.0 < self.grid_size.0 / 2 && new_position.1 < self.grid_size.1 / 2 {
@@ -94,41 +75,28 @@ impl quadrants {
 pub fn run_day_14() {
     let mut quadrants = quadrants::default();
     quadrants.grid_size = (101, 103);
-    solve_part_02();
+
+    let sum = solve_part_01(quadrants.clone(), 100);
+    println!("part one: {}", sum);
+    solve_part_02(quadrants);
 }
 
-fn solve_part_02() {
-    let mut grid: Vec<Vec<char>> = vec![vec!['.'; 103]; 101];
-    let mut counter = 0;
-    let mut quadrants = quadrants::default();
-    quadrants.grid_size = (101, 103);
+// i know its stupid and slow, but it works and it was late
+fn solve_part_02(quadrants: quadrants) {
+    let mut min_sum = INFINITY as i32;
+    let mut min_counter = 0;
 
-    loop {
-        // thread::sleep(Duration::from_millis(500));
-        // println!("Iteration: {}", counter);
-        solve_part_01(quadrants.clone(), counter);
-        counter += 1;
-    }
-}
-
-fn print_grid(grid: &mut Vec<Vec<char>>) {
-    // Print the grid (borrow immutably while printing)
-    for row in &*grid {
-        for &digit in row {
-            print!("{}", digit);
-        }
-        println!();
-    }
-
-    // Now modify the values
-    for row in grid.iter_mut() {
-        for digit in row {
-            *digit = '.'; // For example, increment each digit
+    for i in 0..10_000 {
+        let sum = solve_part_01(quadrants.clone(), i);
+        if sum < min_sum {
+            min_sum = sum;
+            min_counter = i;
         }
     }
+    println!("part two: {}", min_counter)
 }
 
-fn solve_part_01(mut quadrants: quadrants, counter: i32) {
+fn solve_part_01(mut quadrants: quadrants, counter: i32) -> i32 {
     let file = File::open("src/day_14/input.txt").expect("could not open file");
     let reader = BufReader::new(file);
 
@@ -144,10 +112,7 @@ fn solve_part_01(mut quadrants: quadrants, counter: i32) {
         }
     }
 
-    if quadrants.clone().get_sum() < 100000000 {
-        println!("Iteration: {}", counter);
-        println!("part one: {}", quadrants.get_sum());
-    }
+    quadrants.get_sum()
 }
 
 fn parse_line(line: &str, re: &Regex) -> Option<((i32, i32), (i32, i32))> {
