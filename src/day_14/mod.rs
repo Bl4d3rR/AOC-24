@@ -30,8 +30,10 @@ impl quadrants {
     // grid quadrants look as follows
     // 1 2
     // 3 4
-    fn add_to_quadrant(&mut self, position: (i32, i32), velocity: (i32, i32)) {
-        let new_position = self.clone().calculate_position(position, velocity);
+    fn add_to_quadrant(&mut self, position: (i32, i32), velocity: (i32, i32), counter: i32) {
+        let new_position = self
+            .clone()
+            .calculate_position_by_second(position, velocity, counter);
         // println!(
         //     "pos: {}, {}, velocity: {}, {}, new_pos: {}, {}, grid: {}, {}",
         //     position.0,
@@ -102,28 +104,9 @@ fn solve_part_02() {
     quadrants.grid_size = (101, 103);
 
     loop {
-        thread::sleep(Duration::from_millis(500));
-        // clearscreen::clear().expect("failed to clear screen");
-        let file = File::open("src/day_14/input.txt").expect("could not open file");
-        let reader = BufReader::new(file);
-
-        let re =
-            Regex::new(r"^p=(?P<px>-?\d+),(?P<py>-?\d+)\s+v=(?P<vx>-?\d+),(?P<vy>-?\d+)$").unwrap();
-
-        for line_res in reader.lines() {
-            let line = line_res.expect("could not read line");
-            if let Some(((px, py), (vx, vy))) = parse_line(&line, &re) {
-                let position =
-                    quadrants
-                        .clone()
-                        .calculate_position_by_second((px, py), (vx, vy), counter);
-                grid[position.0 as usize][position.1 as usize] = 'X'
-            } else {
-                eprintln!("Failed to parse line: {}", line);
-            }
-        }
-        print_grid(&mut grid);
-        println!("Iteration: {}", counter);
+        // thread::sleep(Duration::from_millis(500));
+        // println!("Iteration: {}", counter);
+        solve_part_01(quadrants.clone(), counter);
         counter += 1;
     }
 }
@@ -145,7 +128,7 @@ fn print_grid(grid: &mut Vec<Vec<char>>) {
     }
 }
 
-fn solve_part_01(mut quadrants: quadrants) {
+fn solve_part_01(mut quadrants: quadrants, counter: i32) {
     let file = File::open("src/day_14/input.txt").expect("could not open file");
     let reader = BufReader::new(file);
 
@@ -155,13 +138,16 @@ fn solve_part_01(mut quadrants: quadrants) {
     for line_res in reader.lines() {
         let line = line_res.expect("could not read line");
         if let Some(((px, py), (vx, vy))) = parse_line(&line, &re) {
-            quadrants.add_to_quadrant((px, py), (vx, vy));
+            quadrants.add_to_quadrant((px, py), (vx, vy), counter);
         } else {
             eprintln!("Failed to parse line: {}", line);
         }
     }
 
-    println!("part one: {}", quadrants.get_sum());
+    if quadrants.clone().get_sum() < 100000000 {
+        println!("Iteration: {}", counter);
+        println!("part one: {}", quadrants.get_sum());
+    }
 }
 
 fn parse_line(line: &str, re: &Regex) -> Option<((i32, i32), (i32, i32))> {
